@@ -33,12 +33,8 @@ ENV BUILD_ARCH=${BUILD_ARCH}
 ARG DEBUG=false
 ENV DEBUG=${DEBUG}
 RUN chmod +x ./install.sh && \
-    if [ "$DEBUG" = "true" ]; then \
-        ./install.sh --${BUILD_ARCH} --debug_all --skip-deps; \
-    else \
-        ./install.sh --${BUILD_ARCH} --release --skip-deps; \
-    fi && \
-    cp ./build/ndd-${BUILD_ARCH} ./ndd-server
+    ./install.sh --avx2 --release --skip-deps && \
+    cp ./build/ndd-avx2 ./ndd-server
 
 # STAGE 2: RUNTIME
 FROM ${BASE_IMAGE}
