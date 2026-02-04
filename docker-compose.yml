@@ -1,7 +1,7 @@
 services:
   endee-oss:
-    build: .
-    image: endee-oss:
+    #build: .
+    image: endee-oss:latest
     container_name: endee-oss
     ports:
       - "8080:8080"
