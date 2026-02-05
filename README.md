@@ -13,18 +13,6 @@ This project implements a complete RAG workflow:
 
 ---
 
-## 🏗️ Architecture
-```text
-User Question
-    ↓
-Embedding Generation
-    ↓
-Endee Vector Search (Cosine Similarity)
-    ↓
-Top-K Retrieval
-    ↓
-Context-Based Answer Generation
-```
 
 ## 📂 Project Structure
 ```text
@@ -72,14 +60,14 @@ Deployment: Docker-based vector database deployment.
 
 ## 🚧 Limitations & Roadmap
 -- Current Limitations
-Uses mock generation (no LLM integration yet)
-No document chunking
-No similarity threshold filtering
-CLI-based interface only
-No production-grade authentication handling
+1. Uses mock generation (no LLM integration yet)
+2. No document chunking
+3. No similarity threshold filtering
+4. CLI-based interface only
+5. No production-grade authentication handling
 
 -- Future Improvements
-Integrate OpenAI / Llama / Local LLMs.
-Implement recursive character text splitting (chunking).
-Build a Streamlit UI for web-based interaction.
-Add PDF and Markdown ingestion support.
+1. Integrate OpenAI / Llama / Local LLMs.
+2. Implement recursive character text splitting (chunking).
+3. Build a Streamlit UI for web-based interaction.
+4. Add PDF and Markdown ingestion support.
