@@ -23,7 +23,7 @@ graph TD
 
 
 ## 📂 Project Structure
-text
+```text
 rag-doc-search/
 ├── docs.txt             # Source knowledge base
 ├── src/
@@ -32,6 +32,7 @@ rag-doc-search/
 │   ├── query.py         # Similarity search testing
 │   └── rag_pipeline.py  # Full interactive RAG interface
 └── README.md
+``` 
 
 
 ## 🛠️ Requirements & Setup
