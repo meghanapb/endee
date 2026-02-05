@@ -14,15 +14,17 @@ This project implements a complete RAG workflow:
 ---
 
 ## 🏗️ Architecture
-
-```mermaid
-graph TD
-    A[User Question] --> B[Embedding Generation]
-    B --> C[Endee Vector Search]
-    C --> D[Top-K Context Retrieval]
-    D --> E[Context-Based Answer Generation]
+```text
+User Question
+    ↓
+Embedding Generation
+    ↓
+Endee Vector Search (Cosine Similarity)
+    ↓
+Top-K Retrieval
+    ↓
+Context-Based Answer Generation
 ```
-
 
 ## 📂 Project Structure
 ```text
