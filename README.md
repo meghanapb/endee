@@ -1,309 +1,160 @@
-# Endee: High-Performance Open Source Vector Database
+Endee RAG Document Search System
 
-**Endee (nD)** is a specialized, high-performance vector database built for speed and efficiency. This guide covers supported platforms, dependency requirements, and detailed build instructions using both our automated installer and manual CMake configuration.
+Endee RAG Document Search is a lightweight Retrieval-Augmented Generation (RAG) pipeline built using Endee OSS (nD) as the vector database.
+This project demonstrates semantic search, embedding storage, and context-based answer generation using vector similarity.
 
----
+1. System Overview
 
-## 1. System Requirements
+This project implements a complete RAG workflow:
 
-Before installing, ensure your system meets the following hardware and operating system requirements.
+Convert documents into embeddings (384 dimensions)
 
-### Supported Operating Systems
+Store embeddings inside Endee vector database
 
-* **Linux**: Ubuntu(22.04, 24.04, 25.04) Debian(12, 13), Rocky(8, 9, 10), Centos(8, 9, 10), Fedora(40, 42, 43)
-* **macOS**: Apple Silicon (M Series) only.
+Retrieve relevant documents using cosine similarity
 
-### Required Dependencies
+Generate answers grounded in retrieved context
 
-The following packages are required for compilation.
+This is a working example of Retrieval-Augmented Generation — not just vector search.
 
- `clang-19`, `cmake`, `build-essential`, `libssl-dev`, `libcurl4-openssl-dev`
+2. Architecture
+User Question
+      ↓
+Embedding Generation
+      ↓
+Endee Vector Search (Cosine Similarity)
+      ↓
+Top-K Retrieval
+      ↓
+Context-Based Answer Generation
 
-> **Note:** The build system requires **Clang 19** (or a compatible recent Clang version) supporting C++20.
+3. Project Structure
+rag-doc-search/
+│
+├── docs.txt                # Source knowledge base
+│
+├── src/
+│   ├── embed.py            # Text → Embedding
+│   ├── ingest.py           # Insert documents into Endee
+│   ├── query.py            # Test similarity search
+│   └── rag_pipeline.py     # Full interactive RAG system
+│
+└── README.md
 
----
+4. Requirements
+Software
 
-## 2. Quick Installation (Recommended)
+Python 3.10+
 
-The easiest way to build **ndd** is using the included `install.sh` script. This script handles OS detection, dependency checks, and configuration automatically.
+Docker
 
-### Usage
+Endee OSS (running on port 8080)
 
-Run the script from the root of the repository. You **must** provide arguments for the build mode and/or CPU optimization.
+Python Dependencies
+pip install requests sentence-transformers msgpack
 
-```bash
-./install.sh [BUILD_MODE] [CPU_OPTIMIZATION]
-```
+5. Running Endee
+Option 1 — Docker (Recommended)
+docker run -p 8080:8080 endee-oss:latest
 
-### Build Arguments
 
-You can combine one **Build Mode** and one **CPU Optimization** flag.
+Verify:
 
-#### Build Modes
+Invoke-RestMethod http://localhost:8080/api/v1/index/list
 
-| Flag | Description | CMake Equivalent |
-| --- | --- | --- |
-| `--release` | **Default.** Optimized release build. |  |
-| `--debug_all` | Enables full debugging symbols. | `-DND_DEBUG=ON -DDEBUG=ON` |
-| `--debug_nd` | Enables NDD-specific logging/timing. | `-DND_DEBUG=ON` |
+6. Create Vector Index
 
-#### CPU Optimization Options
+Create a cosine similarity index (384 dimensions)
 
-Select the flag matching your hardware to enable SIMD optimizations.
+7. Ingest Documents
 
-| Flag | Description | Target Hardware |
-| --- | --- | --- |
-| `--avx2` | Enables AVX2 (FMA, F16C) | Modern x86_64 Intel/AMD |
-| `--avx512` | Enables AVX512 (F, BW, VNNI, FP16) | Server-grade x86_64 (Xeon/Epyc) |
-| `--neon` | Enables NEON (FP16, DotProd) | Apple Silicon / ARMv8.2+ |
-| `--sve2` | Enables SVE2 (INT8/16, FP16) | ARMv9 / SVE2 compatible |
+Ensure docs.txt contains one document per line.
 
-> **Note:** The `--avx512` build configuration enforces mandatory runtime checks for specific instruction sets. To successfully run this build, your CPU must support **`avx512` (Foundation), `avx512_fp16`, `avx512_vnni`, `avx512bw`, and `avx512_vpopcntdq`**; if any of these extensions are missing, the database will fail to initialize and exit immediately to avoid runtime crashes.
+Run:
 
+python -m src.ingest
 
-### Example Commands
 
-**Build for Production (Intel/AMD with AVX2):**
+Verify ingestion:
 
-```bash
-./install.sh --release --avx2
-```
+Invoke-RestMethod http://localhost:8080/api/v1/index/list
 
-**Example Build for Debugging (Apple Silicon):**
 
-```bash
-./install.sh --debug_all --neon
-```
+8. Test Vector Search
+python -m src.query
 
----
+Expected Output:
 
-## 3. Manual Build (Advanced)
+Status Code: 200
 
-If you prefer to configure the build manually or integrate it into an existing install pipeline, you can use `cmake` directly.
+Similarity Score
 
-### Step 1: Prepare Build Directory
+Retrieved Document Content
 
-```bash
-mkdir build && cd build
-```
+9. Run Full RAG Pipeline (Interactive Mode)
+python -m src.rag_pipeline
 
-### Step 2: Configure
 
-Run `cmake` with the appropriate flags. You must manually define the compiler if it is not your system default.
+Example:
+Endee RAG System Ready
+Type 'exit' to quit.
 
-**Configuration Flags:**
+Ask a question: What is RAG?
 
-* **Debug Options:**
-* `-DDEBUG=ON` (Enable debug symbols/O0)
-* `-DND_DEBUG=ON` (Enable internal logging)
+Question:
+What is RAG?
 
+Answer based on retrieved documents:
+RAG stands for Retrieval Augmented Generation.
 
-* **SIMD Selectors (Choose One):**
-* `-DUSE_AVX2=ON`
-* `-DUSE_AVX512=ON`
-* `-DUSE_NEON=ON`
-* `-DUSE_SVE2=ON`
+10. Features Implemented
 
+384-dimensional embeddings
 
-**Example (x86_64 AVX512 Release):**
+Cosine similarity search
 
-```bash
-cmake -DCMAKE_BUILD_TYPE=Release \
-      -DUSE_AVX512=ON \
-      ..
-```
+HNSW-based vector indexing (via Endee)
 
-### Step 3: Compile
+Metadata storage
 
-```bash
-make -j$(nproc)
-```
+Interactive RAG interface
 
----
+Docker-based vector database deployment
 
-## 4. Running ndd
+11. Key Concepts Demonstrated
 
-After a successful build, the binary will be generated in the `build/` directory.
+Retrieval Augmented Generation (RAG)
 
-### Binary Naming
+Embedding-based search
 
-The output binary name depends on the SIMD flag used during compilation:
+Nearest neighbor search
 
-* `ndd-avx2`
-* `ndd-avx512`
-* `ndd-neon` (or `ndd-neon-darwin` for mac)
-* `ndd-sve2`
+Vector indexing
 
-### Runtime Environment Variables
+Semantic search vs keyword search
 
-Some enviroment variables **ndd** reads at runtime:
+REST API communication
 
-* `NDD_DATA_DIR`: Defines the data directory
-* `NDD_AUTH_TOKEN`: Optional authentication token (see below)
+12. Limitations
 
-### Authentication
+Uses mock generation (no LLM integration yet)
 
-**ndd** supports two authentication modes:
+No document chunking
 
-**Open Mode (No Authentication)** - Default when `NDD_AUTH_TOKEN` is not set:
-```bash
-# All APIs work without authentication
-./build/ndd-avx2
-curl http://{{BASE_URL}}/api/v1/index/list
-```
+No similarity threshold filtering
 
-**Token Mode** - When `NDD_AUTH_TOKEN` is set:
-```bash
-# Generate a secure token
-export NDD_AUTH_TOKEN=$(openssl rand -hex 32)
-./build/ndd-avx2
+Basic CLI interface only
 
-# All protected APIs require the token in Authorization header
-curl -H "Authorization: $NDD_AUTH_TOKEN" http://{{BASE_URL}}/api/v1/index/list
-```
+13. Future Improvements
 
-### Execution Example
+Add OpenAI / Llama / Local LLM integration
 
-To run the database using the AVX2 binary and a local `data` folder:
+Add document chunking pipeline
 
-```bash
-# 1. Create the data directory
-mkdir -p ./data
+Add similarity threshold filtering
 
-# 2. Export the environment variable and run
-export NDD_DATA_DIR=$(pwd)/data
-./build/ndd-avx2
-```
+Add Streamlit UI
 
-Alternatively, as a single line:
+Add PDF ingestion support
 
-```bash
-NDD_DATA_DIR=./data ./build/ndd-avx2
-```
-
----
-## 5. Docker Deployment
-
-We provide a Dockerfile for easy containerization. This ensures a consistent runtime environment and simplifies the deployment process across various platforms.
-
-### Build the Image
-
-You **must** specify the target architecture (`avx2`, `avx512`, `neon`, `sve2`) using the `BUILD_ARCH` build argument. You can optionally enable a debug build using the `DEBUG` argument.
-
-```bash
-# Production Build (AVX2) (for x86_64 systems)
-docker build --ulimit nofile=100000:100000 --build-arg BUILD_ARCH=avx2 -t endee-oss:latest -f ./infra/Dockerfile .
-
-# Debug Build (Neon) (for arm64, mac apple silicon)
-docker build --ulimit nofile=100000:100000 --build-arg BUILD_ARCH=neon --build-arg DEBUG=true -t endee-oss:latest -f ./infra/Dockerfile .
-```
-
-### Run the Container
-
-The container exposes port `8080` and stores data in `/data` inside container. You should persist this data using a docker volume.
-
-```bash
-docker run \
-  -p 8080:8080 \
-  -v endee-data:/data \
-  --name endee-server \
-  endee-oss:latest
-```
-
-### Alternatively: Docker Compose
-
-You can also use `docker-compose` to run the service.
-
-1. Start the container:
-   ```bash
-   docker-compose up
-   ```
-
----
-
-## 6. Running Docker container from registry
-
-You can run Endee directly using the pre-built image from Docker Hub without building locally.
-
-### Using Docker Compose
-
-Create a new directory for Endee:
-
-```bash
-mkdir endee && cd endee
-```
-
-Inside this directory, create a file named `docker-compose.yml` and copy the following content into it:
-
-```yaml
-services:
-  endee:
-    image: endeeio/endee-server:latest
-    container_name: endee-server
-    ports:
-      - "8080:8080"
-    environment:
-      NDD_NUM_THREADS: 0
-      NDD_AUTH_TOKEN: ""  # Optional: set for authentication
-    volumes:
-      - endee-data:/data
-    restart: unless-stopped
-
-volumes:
-  endee-data:
-```
-
-Then run:
-```bash
-docker compose up -d
-```
-
-for more details visit [docs.endee.io](https://docs.endee.io/quick-start)
-
----
-
-## Contribution
-
-We welcome contributions from the community to help make vector search faster and more accessible for everyone. To contribute:
-
-* **Submit Pull Requests**: Have a fix or a new feature? Fork the repo, create a branch, and send a PR.
-* **Report Issues**: Found a bug or a performance bottleneck? Open an issue on GitHub with steps to reproduce it.
-* **Suggest Improvements**: We are always looking to optimize performance; feel free to suggest new CPU target optimizations or architectural enhancements.
-* **Feature Requests**: If there is a specific functionality you need, start a discussion in the issues section.
-
----
-
-## License
-
-Endee is open source software licensed under the
-**Apache License 2.0**.
-
-You are free to use, modify, and distribute this software for
-personal, commercial, and production use.
-
-See the LICENSE file for full license terms.
-
----
-
-## Trademark and Branding
-
-“Endee” and the Endee logo are trademarks of Endee Labs.
-
-The Apache License 2.0 does **not** grant permission to use the Endee name,
-logos, or branding in a way that suggests endorsement or affiliation.
-
-If you offer a hosted or managed service based on this software, you must:
-- Use your own branding
-- Avoid implying it is an official Endee service
-
-For trademark or branding permissions, contact: enterprise@endee.io
-
----
-
-## Third-Party Software
-
-This project includes or depends on third-party software components that are
-licensed under their respective open source licenses.
-
-Use of those components is governed by the terms and conditions of their
-individual licenses, not by the Apache License 2.0 for this project.
+Deploy on cloud
